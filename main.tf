@@ -2,7 +2,7 @@
 resource "aws_sns_topic" "this" {
   name              = var.sns_name
   fifo_topic        = var.fifo_topic
-  kms_master_key_id = var.kms_master_key_id
+  kms_master_key_id = module.aws_kms.id #var.kms_master_key_id
   tags = merge(
     { "resourcename" = var.sns_name }, var.tags
   )
@@ -36,4 +36,16 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     }
   }
   depends_on = [aws_sns_topic.this]
+}
+
+
+module "aws_kms" {
+  #source = "../aws-kms"
+  source                  = "git::https://github.com/e2eSolutionArchitect/terraform-aws-kms.git?ref=v1.0.0"
+  kms_name                = "encryption key for ${var.sns_name}"
+  kms_alias               = var.sns_name
+  deletion_window_in_days = var.deletion_window_in_days
+  enable_key_rotation     = var.enable_key_rotation
+  is_enabled              = var.is_enabled
+  tags                    = var.tags
 }
